@@ -1,11 +1,11 @@
 const fs = require('fs');
 const path = require('path');
 
-// Get the path to the JSON file
-const filePath = path.join(process.cwd(), 'public', 'activeTrade.json');
 
 // Helper function to read the JSON file
-const readJsonFile = () => {
+const readJsonFile = (filename) => {
+  const filePath = path.join(process.cwd(),   `${filename}.json`);
+
   try {
     if (!fs.existsSync(filePath)) {
       // Initialize file if it doesn't exist
@@ -26,17 +26,18 @@ const readJsonFile = () => {
 };
 
 // Helper function to write to the JSON file
-const writeJsonFile = data => {
+const writeJsonFile = (data,filename) => {
   console.log(data);
+  const filePath = path.join(process.cwd(),   `${filename}.json`);
   fs.writeFileSync(filePath, JSON.stringify(data, null, 2), 'utf8');
 };
 
 // 1. Create a new entry
-const createEntry = newEntry => {
+const createEntry = (newEntry,filename) => {
   console.log({ newEntry });
-  const data = readJsonFile();
+  const data = readJsonFile(filename);
   data.push(newEntry);
-  writeJsonFile(data);
+  writeJsonFile(data,filename);
   return { message: 'Entry created successfully', newEntry };
 };
 
@@ -63,52 +64,18 @@ const updateEntry = (uniqId, updatedFields) => {
 };
 
 // 4. Delete an entry by ID
-const deleteEntry = uniqId => {
-  const data = readJsonFile();
+const deleteEntry = (uniqId,filename) => {
+  const data = readJsonFile(filename);
   const filteredData = data.filter(entry => entry.uniqId !== uniqId);
 
   if (data.length === filteredData.length) {
     throw new Error('Entry not found');
   }
 
-  writeJsonFile(filteredData);
+  writeJsonFile(filteredData,filename);
   return { message: 'Entry deleted successfully' };
 };
 
-function manageSocket(io) {
-  io.on('connection', socket => {
-    console.log('A user connected');
 
-    // Functionality for send message to all user
-    socket.on('messageToAll', data => {
-      console.log('Message received:', data);
-      io.emit('messageToAll', data);
-    });
 
-    // Functionality for send message to only room member
-    socket.on('login', roomId => {
-      socket.join(roomId);
-      io.in(roomId).emit('user_connected', {
-        Id: `${roomId}`,
-        message: 'You successfully connected',
-      });
-    });
-
-    socket.on('messageToRoomMember', data => {
-      console.log('Message received:', data.senderID);
-      io.in(data.senderID).emit('messageToRoomMember', data.data);
-    });
-    socket.on('onAddAlgo', data => {
-      createEntry(data.data);
-      console.log('Message received:', data.senderID);
-      io.in(data.senderID).emit('onAddAlgo', data.data);
-    });
-
-    // Emiit after disconnect
-    socket.on('disconnect', () => {
-      console.log('A user disconnected');
-    });
-  });
-}
-
-module.exports = { createEntry, readEntries, updateEntry, deleteEntry,manageSocket };
+module.exports = { createEntry, readEntries, updateEntry, deleteEntry };

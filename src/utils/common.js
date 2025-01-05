@@ -11,6 +11,14 @@ export function validate_string(data, prefix, type = 0) {
     throw prefix + ' is not valid';
   }
 }
+export function validate_number_value(data, prefix, type = 0) {
+  if (!data) {
+    let pre = type == 0 ? 'Enter ' : ' Select';
+    throw pre + prefix;
+  } else if (typeof parseInt(data) !== 'number' || parseInt(data) <= 0 || data == null) {
+    throw prefix + ' is not valid';
+  }
+}
 export function validate_config_number(data, prefix, type = 0) {
   if (
     typeof parseInt(data) !== 'number' ||
@@ -453,7 +461,9 @@ export function passEnc(textToEncrypt, secret) {
     encryptor.final('base64')
   );
 }
-
+export const ParseFloat = (value,toFixed=2) =>{
+  console.log(value)
+  return parseFloat(parseFloat(value).toFixed(typeof toFixed === 'number' ? toFixed : 2));}
 export function validateURL(url, msg) {
   if (!url) throw 'Enter ' + msg;
   const pattern =

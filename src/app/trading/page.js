@@ -1,10 +1,10 @@
 'use client';
-import Content from '@/component/Trading/Content';
+import TradingContent from '@/component/Trading/TradingContent';
 
 const TradingPage = () => {
   return (
     <>
-      <Content />
+      <TradingContent />
     </>
   );
 };

@@ -1,10 +1,10 @@
 'use client';
 import React, { useState, useEffect, use } from 'react';
 import CommonModal from '../common/CommonModal';
-import { convert_date_upto_second, validate_string } from '@/utils/common';
+import { convert_date_upto_second, ParseFloat, validate_number_value, validate_string } from '@/utils/common';
 import io from 'socket.io-client';
 const socket = io();
-const AddAlgoModal = ({ addAlgoForm, setAddAlgoForm, onSubmitAlgoForm }) => {
+const AddAlgoModal = ({ addAlgoForm, setAddAlgoForm, onSubmitAlgoForm,entryOnLtp,setEntryOnLtp }) => {
   const handleChange = e => {
     const { name, value } = e.target;
     setAddAlgoForm({ ...addAlgoForm, [name]: value });
@@ -13,15 +13,18 @@ const AddAlgoModal = ({ addAlgoForm, setAddAlgoForm, onSubmitAlgoForm }) => {
     <>
       <div className='d-flex flex-column gap-3'>
         <div className='form-group'>
-          <label for='formGroupExampleInput2'>Entry Price</label>
+          <div className='d-flex justify-content-between'><label for='formGroupExampleInput2'>Entry Price</label>  <div className="form-check custom-checkbox  checkbox-success">
+											<input type="checkbox" className="form-check-input" checked={entryOnLtp} onChange={(e) => setEntryOnLtp(e.target.checked)}    id="customCheckBox3" required=""/>
+											<label className="form-check-label" for="customCheckBox3">Entry on LTP?</label>
+										</div></div>
           <input
             type='number'
             className='form-control'
             id='formGroupExampleInput2'
             placeholder='Entry Price'
             name='entryPrice'
-            value={addAlgoForm.entryPrice}
-            onChange={handleChange}
+            value={entryOnLtp ? 0 :addAlgoForm.entryPrice}
+            onChange={!entryOnLtp ? handleChange:()=>{}}
           />
         </div>
         <div className='form-group'>
@@ -37,7 +40,7 @@ const AddAlgoModal = ({ addAlgoForm, setAddAlgoForm, onSubmitAlgoForm }) => {
           />
         </div>
         <div className='form-group'>
-          <label for='formGroupExampleInput2'>Stop Loss</label>
+          <label for='formGroupExampleInput2'>{`Stop Loss(%)`}</label>
           <input
             type='number'
             className='form-control'
@@ -49,7 +52,7 @@ const AddAlgoModal = ({ addAlgoForm, setAddAlgoForm, onSubmitAlgoForm }) => {
           />
         </div>
         <div className='form-group'>
-          <label for='formGroupExampleInput2'>Target Price</label>
+          <label for='formGroupExampleInput2'>{`Target Price(%)`}</label>
           <input
             type='number'
             className='form-control'
@@ -64,14 +67,15 @@ const AddAlgoModal = ({ addAlgoForm, setAddAlgoForm, onSubmitAlgoForm }) => {
     </>
   );
 };
-const Content = () => {
+const TradingContent = () => {
   const [cryptoData, setCryptoData] = useState([]);
   const [socketBlockId, setSocketBlockId] = useState(10);
+  const [entryOnLtp, setEntryOnLtp] = useState(true);
   const [addAlgoForm, setAddAlgoForm] = useState({
     entryPrice: '',
-    quantity: '',
-    stopLoss: '',
-    targetPrice: '',
+    quantity: 1,
+    stopLoss: 0.0001,
+    targetPrice: 5,
     tradeId: cryptoData[0]?.tradeId,
   });
   const [show, setShow] = useState(false);
@@ -90,24 +94,42 @@ const Content = () => {
     }
     return;
   };
+
+  const modifiedPrice = (price, percentage, type) => {
+    console.log({price, percentage, type})
+    if (type === 'add') {
+      return price + (price * percentage) / 100;
+    } else {
+      return price - (price * percentage) / 100;
+    }
+
+  }
   const onSubmitAlgoForm = event => {
     // console.log(addAlgoForm);
+    const formData = {
+      uniqId: `${cryptoData[0]?.tradeId}`,
+      entryPrice: entryOnLtp ? ParseFloat(cryptoData[0]?.latestTradedPrice,4)  : ParseFloat(addAlgoForm.entryPrice,4),
+      quantity: parseInt(addAlgoForm.quantity),
+      stopLoss: ParseFloat(modifiedPrice(parseFloat(entryOnLtp ?cryptoData[0]?.latestTradedPrice  : addAlgoForm.entryPrice), parseFloat(addAlgoForm.stopLoss), 'sub'),4),
+      targetPrice: ParseFloat(modifiedPrice(parseFloat(entryOnLtp ?cryptoData[0]?.latestTradedPrice  : addAlgoForm.entryPrice), parseFloat(addAlgoForm.targetPrice), 'add'),4),
+    }
 
+    console.log(formData)
     try {
-      validate_string(addAlgoForm.entryPrice, 'entryPrice');
-      validate_string(addAlgoForm.quantity, 'quantity');
-      validate_string(addAlgoForm.stopLoss, 'stopLoss');
-      validate_string(addAlgoForm.targetPrice, 'targetPrice');
-      validate_string(`${cryptoData[0]?.tradeId}`, 'uniqId');
-      // socket.emit('onAddAlgo', { senderID: socketBlockId, data: {...addAlgoForm, uniqId:cryptoData[0]?.tradeId,} });
+      validate_number_value(formData.entryPrice, 'entryPrice');
+      validate_number_value(formData.quantity, 'quantity');
+      validate_number_value(formData.stopLoss, 'stopLoss');
+      validate_number_value(formData.targetPrice, 'targetPrice');
+      validate_string(formData.uniqId, 'uniqId');
     } catch (e) {
       alert(e);
       return false;
     }
     console.log('submit');
+
     socket.emit('onAddAlgo', {
       senderID: socketBlockId,
-      data: { ...addAlgoForm, uniqId: cryptoData[0]?.tradeId },
+      data: formData,
     });
   };
   useEffect(() => {
@@ -155,7 +177,15 @@ const Content = () => {
     };
   }, []);
 
+
   // ============================================================================ Currency list End ==========================================================================
+
+  useEffect(() => {
+    if (!entryOnLtp) {
+
+      setAddAlgoForm({ ...addAlgoForm, entryPrice: cryptoData[0]?.latestTradedPrice });
+    }
+  }, []);
   return (
     <>
       <div className='content-body'>
@@ -242,6 +272,8 @@ const Content = () => {
             addAlgoForm={addAlgoForm}
             setAddAlgoForm={setAddAlgoForm}
             onSubmitAlgoForm={onSubmitAlgoForm}
+            entryOnLtp={entryOnLtp}
+            setEntryOnLtp={setEntryOnLtp}
           />
         }
         handleClose={handleClose}
@@ -254,4 +286,4 @@ const Content = () => {
   );
 };
 
-export default Content;
+export default TradingContent;
