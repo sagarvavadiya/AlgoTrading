@@ -3,6 +3,7 @@ const express = require('express');
 const { createServer } = require('http');
 const { Server } = require('socket.io');
 const next = require('next');
+const { createEntry } = require('./src/utils/manageActiveTrade');
 
 // Set up Next.js app
 const dev = process.env.NODE_ENV !== 'production';
@@ -38,6 +39,11 @@ io.on('connection', socket => {
   socket.on('messageToRoomMember', data => {
     console.log('Message received:', data.senderID);
     io.in(data.senderID).emit('messageToRoomMember', data.data);
+  });
+  socket.on('onAddAlgo', data => {
+    createEntry(data.data);
+    console.log('Message received:', data.senderID);
+    io.in(data.senderID).emit('onAddAlgo', data.data);
   });
 
   // Emiit after disconnect
