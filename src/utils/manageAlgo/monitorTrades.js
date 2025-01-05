@@ -2,17 +2,17 @@
 const fs =  require('fs');
 const path =  require('path');
 const WebSocket =  require('ws');
-const { deleteEntry } = require('./manageActiveTrade');
-
+const { deleteEntry, createEntry } = require('./manageActiveTrade');
+const {updateConfigValue, getConfigValue} = require('./config');
 let ws;
-let monitoring = false;
+let monitoring = getConfigValue('tradeMonitoring');
 let debounceTimeout;
 const DEBOUNCE_INTERVAL = 500;
 
 function startMonitoringTrades() {
   if (monitoring) return; // Avoid starting multiple monitors
-  monitoring = true;
-
+  // monitoring = true;
+  updateConfigValue('tradeMonitoring', true);
   const filePath = path.join(process.cwd(),   '../activeTrade.json');
 
   ws = new WebSocket('wss://stream.binance.com:9443/ws/btcusdt@trade');
@@ -40,8 +40,12 @@ function startMonitoringTrades() {
         trades.forEach((trade, index) => {
           if (livePrice >= trade.targetPrice) {
             deleteEntry(trade.uniqId, '../activeTrade');
+            createEntry({...trade,profit: livePrice - trade.entryPrice},'../closedTrade');
+            console.log('target price reached', livePrice - trade.entryPrice);
           } else if (livePrice <= trade.stopLoss) {
             deleteEntry(trade.uniqId, '../activeTrade');
+            createEntry({...trade,loss: trade.entryPrice - livePrice},'../closedTrade');
+            console.log('stop loss reached', trade.entryPrice - livePrice);
           }
         });
       } catch (error) {
@@ -52,12 +56,14 @@ function startMonitoringTrades() {
 
   ws.onclose = () => {
     console.log('WebSocket closed. Stopping monitoring...');
-    monitoring = false;
+    // monitoring = false;
+    updateConfigValue('tradeMonitoring', false);
   };
 
   ws.onerror = (error) => {
     console.error('WebSocket error:', error);
-    monitoring = false;
+    // monitoring = false;
+    updateConfigValue('tradeMonitoring', false);
   };
 
   console.log('Started monitoring trades...');
@@ -66,6 +72,7 @@ function startMonitoringTrades() {
   function stopMonitoringTrades() {
   if (ws) ws.close();
   monitoring = false;
+  updateConfigValue('tradeMonitoring', false);
   console.log('Stopped monitoring trades.');
 }
 

@@ -1,4 +1,6 @@
+const { updateConfigValue, getConfigValue } = require("./config");
 const { createEntry } = require("./manageActiveTrade");
+const { watchTradeFile } = require("./monitorTrades");
 
 function manageSocket(io) {
   io.on('connection', socket => {
@@ -25,6 +27,12 @@ function manageSocket(io) {
     });
     socket.on('onAddAlgo', data => {
       createEntry(data.data,'../activeTrade');
+      let isMonitoring = getConfigValue('tradeMonitoring');
+      console.log({isMonitoring})
+      if (!isMonitoring) {
+        updateConfigValue('tradeMonitoring', true);
+        watchTradeFile()
+      }
       console.log('Message received:', data.senderID);
       io.in(data.senderID).emit('onAddAlgo', data.data);
     });

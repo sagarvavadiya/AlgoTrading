@@ -18,7 +18,6 @@ const server = createServer(expressApp);
 // Set up Socket.io server
 const io = new Server(server);
 
-let rooms = {};
 manageSocket(io)
 watchTradeFile()
 // Prepare the Next.js app and routes
