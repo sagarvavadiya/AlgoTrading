@@ -1,10 +1,22 @@
 'use client';
 import React, { useState, useEffect, use } from 'react';
 import CommonModal from '../common/CommonModal';
-import { convert_date_upto_second, ParseFloat, validate_number_value, validate_string } from '@/utils/common';
+import {
+  convert_date_upto_second,
+  ParseFloat,
+  validate_number_value,
+  validate_string,
+} from '@/utils/common';
 import io from 'socket.io-client';
 const socket = io();
-const AddAlgoModal = ({ addAlgoForm, setAddAlgoForm, onSubmitAlgoForm,entryOnLtp,setEntryOnLtp }) => {
+const AddAlgoModal = ({
+  addAlgoForm,
+  setAddAlgoForm,
+  onSubmitAlgoForm,
+  entryOnLtp,
+  setEntryOnLtp,isBothSideTrade,
+  setIsBothSideTrade
+}) => {
   const handleChange = e => {
     const { name, value } = e.target;
     setAddAlgoForm({ ...addAlgoForm, [name]: value });
@@ -13,18 +25,60 @@ const AddAlgoModal = ({ addAlgoForm, setAddAlgoForm, onSubmitAlgoForm,entryOnLtp
     <>
       <div className='d-flex flex-column gap-3'>
         <div className='form-group'>
-          <div className='d-flex justify-content-between'><label for='formGroupExampleInput2'>Entry Price</label>  <div className="form-check custom-checkbox  checkbox-success">
-											<input type="checkbox" className="form-check-input" checked={entryOnLtp} onChange={(e) => setEntryOnLtp(e.target.checked)}    id="customCheckBox3" required=""/>
-											<label className="form-check-label" for="customCheckBox3">Entry on LTP?</label>
-										</div></div>
+          <div className='d-flex justify-content-between'>
+            <div className='form-check custom-checkbox  checkbox-success'>
+              <input
+                type='checkbox'
+                name='isShortSell'
+                className='form-check-input'
+                checked={isBothSideTrade}
+                onChange={e => setIsBothSideTrade(e.target.checked)}
+                id='customCheckBox3'
+                required=''
+              />
+              <label className='form-check-label' for='customCheckBox3'>
+                Is Bothside Trade?
+              </label>
+            </div>
+            <div className='form-check custom-checkbox  checkbox-success'>
+              <input
+                type='checkbox'
+                name='isShortSell'
+                className='form-check-input'
+                checked={addAlgoForm.isShortSell}
+                onChange={e => handleChange({target:{name:"isShortSell",value:e.target.checked}})}
+                id='customCheckBox3'
+                required=''
+              />
+              <label className='form-check-label' for='customCheckBox3'>
+                Is Short Sell?
+              </label>
+            </div>
+            <div className='form-check custom-checkbox  checkbox-success'>
+              <input
+                type='checkbox'
+                className='form-check-input'
+                checked={entryOnLtp}
+                onChange={e => setEntryOnLtp(e.target.checked)}
+                id='customCheckBox3'
+                required=''
+              />
+              <label className='form-check-label' for='customCheckBox3'>
+                Entry on LTP?
+              </label>
+            </div>
+          </div>
+        </div>
+        <div className='form-group'>
+          <label for='formGroupExampleInput2'>Entry Price</label>
           <input
             type='number'
             className='form-control'
             id='formGroupExampleInput2'
             placeholder='Entry Price'
             name='entryPrice'
-            value={entryOnLtp ? 0 :addAlgoForm.entryPrice}
-            onChange={!entryOnLtp ? handleChange:()=>{}}
+            value={entryOnLtp ? 0 : addAlgoForm.entryPrice}
+            onChange={!entryOnLtp ? handleChange : () => {}}
           />
         </div>
         <div className='form-group'>
@@ -72,12 +126,14 @@ const TradingContent = () => {
   const [socketBlockId, setSocketBlockId] = useState(10);
   const [entryOnLtp, setEntryOnLtp] = useState(true);
   const [addAlgoForm, setAddAlgoForm] = useState({
+    isShortSell: false,
     entryPrice: '',
     quantity: 1,
     stopLoss: 0.0001,
     targetPrice: 5,
     tradeId: cryptoData[0]?.tradeId,
   });
+  const [isBothSideTrade, setIsBothSideTrade] = useState(true);
   const [show, setShow] = useState(false);
   const handleClose = () => setShow(false);
   const handleShow = () => setShow(true);
@@ -96,25 +152,48 @@ const TradingContent = () => {
   };
 
   const modifiedPrice = (price, percentage, type) => {
-    console.log({price, percentage, type})
+    console.log({ price, percentage, type });
     if (type === 'add') {
       return price + (price * percentage) / 100;
     } else {
       return price - (price * percentage) / 100;
     }
-
-  }
+  };
   const onSubmitAlgoForm = event => {
     // console.log(addAlgoForm);
     const formData = {
       uniqId: `${cryptoData[0]?.tradeId}`,
-      entryPrice: entryOnLtp ? ParseFloat(cryptoData[0]?.latestTradedPrice,4)  : ParseFloat(addAlgoForm.entryPrice,4),
+      isShortSell: addAlgoForm.isShortSell,
+      entryPrice: entryOnLtp
+        ? ParseFloat(cryptoData[0]?.latestTradedPrice, 4)
+        : ParseFloat(addAlgoForm.entryPrice, 4),
       quantity: parseInt(addAlgoForm.quantity),
-      stopLoss: ParseFloat(modifiedPrice(parseFloat(entryOnLtp ?cryptoData[0]?.latestTradedPrice  : addAlgoForm.entryPrice), parseFloat(addAlgoForm.stopLoss), 'sub'),4),
-      targetPrice: ParseFloat(modifiedPrice(parseFloat(entryOnLtp ?cryptoData[0]?.latestTradedPrice  : addAlgoForm.entryPrice), parseFloat(addAlgoForm.targetPrice), 'add'),4),
-    }
+      stopLoss: ParseFloat(
+        modifiedPrice(
+          parseFloat(
+            entryOnLtp
+              ? cryptoData[0]?.latestTradedPrice
+              : addAlgoForm.entryPrice,
+          ),
+          parseFloat(addAlgoForm.stopLoss),
+          'sub',
+        ),
+        4,
+      ),
+      targetPrice: ParseFloat(
+        modifiedPrice(
+          parseFloat(
+            entryOnLtp
+              ? cryptoData[0]?.latestTradedPrice
+              : addAlgoForm.entryPrice,
+          ),
+          parseFloat(addAlgoForm.targetPrice),
+          'add',
+        ),
+        4,
+      ),
+    };
 
-    console.log(formData)
     try {
       validate_number_value(formData.entryPrice, 'entryPrice');
       validate_number_value(formData.quantity, 'quantity');
@@ -127,10 +206,85 @@ const TradingContent = () => {
     }
     console.log('submit');
 
-    socket.emit('onAddAlgo', {
+    if (!isBothSideTrade) {
+          socket.emit('onAddAlgo', {
       senderID: socketBlockId,
-      data: formData,
+      data: [formData],
     });
+    } else {
+      function algoStrategy({ltp,quantity,stopLoss,targetPrice}) {
+
+        const regTradeEntry = ltp +1
+        const shortSellTradeEntry = ltp -1
+        const regTradeFormData = {
+          uniqId: `1`,
+          isShortSell:false,
+          entryPrice:regTradeEntry,
+          quantity: parseInt(quantity),
+          stopLoss: ParseFloat(
+            modifiedPrice(
+              parseFloat(
+               regTradeEntry,
+              ),
+              parseFloat(stopLoss),
+              'sub',
+            ),
+            4,
+          ),
+          targetPrice: ParseFloat(
+            modifiedPrice(
+              parseFloat(
+                regTradeEntry
+              ),
+              parseFloat(targetPrice),
+              'add',
+            ),
+            4,
+          ),
+        };
+        const shortSellTradeFormData =  {
+          uniqId: `2`,
+          isShortSell:true,
+          entryPrice:shortSellTradeEntry,
+          quantity: parseInt(quantity),
+          stopLoss: ParseFloat(
+            modifiedPrice(
+              parseFloat(
+               shortSellTradeEntry,
+              ),
+              parseFloat(stopLoss),
+              'add',
+            ),
+            4,
+          ),
+          targetPrice: ParseFloat(
+            modifiedPrice(
+              parseFloat(
+                shortSellTradeEntry
+              ),
+              parseFloat(targetPrice),
+              'sub',
+            ),
+            4,
+          ),
+        };
+
+        return [regTradeFormData,shortSellTradeFormData]
+      }
+
+      const multiTrades = algoStrategy({
+        ltp: ParseFloat(cryptoData[0]?.latestTradedPrice, 4),
+        quantity: parseInt(addAlgoForm.quantity),
+        stopLoss: ParseFloat(addAlgoForm.stopLoss, 4),
+        targetPrice: ParseFloat(addAlgoForm.targetPrice, 4),
+      });
+
+
+        socket.emit('onAddAlgo', {
+          senderID: socketBlockId,
+          data: multiTrades,
+        });
+      }
   };
   useEffect(() => {
     // Set up the event listener
@@ -177,13 +331,14 @@ const TradingContent = () => {
     };
   }, []);
 
-
   // ============================================================================ Currency list End ==========================================================================
 
   useEffect(() => {
     if (!entryOnLtp) {
-
-      setAddAlgoForm({ ...addAlgoForm, entryPrice: cryptoData[0]?.latestTradedPrice });
+      setAddAlgoForm({
+        ...addAlgoForm,
+        entryPrice: cryptoData[0]?.latestTradedPrice,
+      });
     }
   }, []);
   return (
@@ -274,6 +429,8 @@ const TradingContent = () => {
             onSubmitAlgoForm={onSubmitAlgoForm}
             entryOnLtp={entryOnLtp}
             setEntryOnLtp={setEntryOnLtp}
+            isBothSideTrade={isBothSideTrade}
+setIsBothSideTrade={setIsBothSideTrade}
           />
         }
         handleClose={handleClose}

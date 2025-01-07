@@ -27,14 +27,12 @@ const readJsonFile = (filename) => {
 
 // Helper function to write to the JSON file
 const writeJsonFile = (data,filename) => {
-  console.log(data);
   const filePath = path.join(process.cwd(),   `${filename}.json`);
   fs.writeFileSync(filePath, JSON.stringify(data, null, 2), 'utf8');
 };
 
 // 1. Create a new entry
 const createEntry = (newEntry,filename) => {
-  console.log({ newEntry });
   const data = readJsonFile(filename);
   data.push(newEntry);
   writeJsonFile(data,filename);

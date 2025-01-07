@@ -26,13 +26,15 @@ function manageSocket(io) {
       io.in(data.senderID).emit('messageToRoomMember', data.data);
     });
     socket.on('onAddAlgo', data => {
-      createEntry(data.data,'../activeTrade');
+      if (data.data && data.data.length > 0) {
+        for (let i = 0; i < data.data.length; i++) {
+          createEntry(data.data[i],'../pandingTrade');
+        }
+      }
+      // createEntry(data.data,'../pandingTrade');
       let isMonitoring = getConfigValue('tradeMonitoring');
       console.log({isMonitoring})
-      if (!isMonitoring) {
-        updateConfigValue('tradeMonitoring', true);
         watchTradeFile()
-      }
       console.log('Message received:', data.senderID);
       io.in(data.senderID).emit('onAddAlgo', data.data);
     });
