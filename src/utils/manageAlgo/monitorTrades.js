@@ -2,7 +2,7 @@
 const fs = require('fs');
 const path = require('path');
 const WebSocket = require('ws');
-const { deleteEntry, createEntry } = require('./manageActiveTrade');
+const { deleteEntry, createEntry, readEntries } = require('./manageActiveTrade');
 const { updateConfigValue, getConfigValue } = require('./config');
 let ws;
 let monitoring = false;
@@ -13,11 +13,7 @@ function startMonitoringTrades() {
   if (monitoring) return; // Avoid starting multiple monitors
   // monitoring = true;
   updateConfigValue('tradeMonitoring', true);
-  const filePath = path.join(process.cwd(), '../activeTrade.json');
-  const pandingTradesFilePath = path.join(
-    process.cwd(),
-    '../pandingTrade.json',
-  );
+
 
   ws = new WebSocket('wss://stream.binance.com:9443/ws/btcusdt@trade');
 
@@ -32,11 +28,8 @@ function startMonitoringTrades() {
         const livePrice = parseFloat(data.p);
         console.log(livePrice);
         // Read active trades
-        const trades = JSON.parse(fs.readFileSync(filePath, 'utf-8'));
-        const pandingTrades = JSON.parse(
-          fs.readFileSync(pandingTradesFilePath, 'utf-8'),
-        );
-
+        const trades = readEntries('activeTrade');
+        const pandingTrades = readEntries('pandingTrade')
         if (
           (!Array.isArray(trades) || trades.length === 0) &&
           (!Array.isArray(pandingTrades) || pandingTrades.length === 0)
@@ -49,23 +42,24 @@ function startMonitoringTrades() {
         // Check each trade for targetPrice or stopLoss
         trades.forEach((trade, index) => {
           if (livePrice >= trade.targetPrice) {
-            deleteEntry(trade.uniqId, '../activeTrade');
+            deleteEntry(trade.uniqId, 'activeTrade');
             createEntry(
               { ...trade, profit: livePrice - trade.entryPrice },
-              '../closedTrade',
+              'closedTrade',
             );
-            createEntry(trade, '../pandingTrade');
+            createEntry(trade, 'pandingTrade');
             console.log(`target price reached  ${trade.isShortSell?"short sell":"Normal"}`, livePrice - trade.entryPrice);
           } else if (livePrice <= trade.stopLoss) {
-            deleteEntry(trade.uniqId, '../activeTrade');
+            deleteEntry(trade.uniqId, 'activeTrade');
             createEntry(
               { ...trade, loss: trade.entryPrice - livePrice },
-              '../closedTrade',
+              'closedTrade',
             );
-            createEntry(trade, '../pandingTrade');
+            createEntry(trade, 'pandingTrade');
             console.log(`stop loss reached in ${trade.isShortSell?"short sell":"Normal"}`, trade.entryPrice - livePrice);
           }
         });
+        console.log(livePrice)
         // Check each panding trade to be active
         pandingTrades.forEach((p_trade, index) => {
           if (p_trade.isShortSell) {
@@ -75,8 +69,8 @@ function startMonitoringTrades() {
               parseInt(livePrice) <
               parseInt(p_trade.entryPrice)
             ) {
-              deleteEntry(p_trade.uniqId, '../pandingTrade');
-              createEntry(p_trade, '../activeTrade');
+              deleteEntry(p_trade.uniqId, 'pandingTrade');
+              createEntry(p_trade, 'activeTrade');
               console.log('Short sell Trade active',`${parseInt(p_trade.entryPrice) - 2} < ${parseInt(livePrice)} < ${parseInt(p_trade.entryPrice)}`);
             }
           } else {
@@ -86,8 +80,8 @@ function startMonitoringTrades() {
               // && parseInt(livePrice) <
               // parseInt(p_trade.entryPrice) + 2
             ) {
-              deleteEntry(p_trade.uniqId, '../pandingTrade');
-              createEntry(p_trade, '../activeTrade');
+              deleteEntry(p_trade.uniqId, 'pandingTrade');
+              createEntry(p_trade, 'activeTrade');
               console.log('Normal Trade active',`${parseInt(p_trade.entryPrice)} < ${parseInt(livePrice)} < ${parseInt(p_trade.entryPrice)+2}`);
             }
           }
@@ -123,7 +117,7 @@ function stopMonitoringTrades() {
 // Watch for changes in activeTrade.json
 function watchTradeFile() {
   console.log('enter watchTradeFile');
-  // const filePath = path.join(process.cwd(),   '../activeTrade.json');
+  // const filePath = path.join(process.cwd(),   'activeTrade.json');
 
   // fs.watchFile(filePath, (curr, prev) => {
   //   console.log('activeTrade.json updated. Checking trades...');

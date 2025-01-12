@@ -1,10 +1,12 @@
 const fs = require('fs');
 const path = require('path');
 
-
+ const getFilePath = ( filename) =>{
+  return path.join(process.cwd(),'public',   `${filename}.json`);
+}
 // Helper function to read the JSON file
 const readJsonFile = (filename) => {
-  const filePath = path.join(process.cwd(),   `${filename}.json`);
+  const filePath = getFilePath(filename)
 
   try {
     if (!fs.existsSync(filePath)) {
@@ -27,7 +29,7 @@ const readJsonFile = (filename) => {
 
 // Helper function to write to the JSON file
 const writeJsonFile = (data,filename) => {
-  const filePath = path.join(process.cwd(),   `${filename}.json`);
+  const filePath = getFilePath(filename)
   fs.writeFileSync(filePath, JSON.stringify(data, null, 2), 'utf8');
 };
 
@@ -40,8 +42,8 @@ const createEntry = (newEntry,filename) => {
 };
 
 // 2. Read all entries
-const readEntries = () => {
-  return readJsonFile();
+const readEntries = (filename) => {
+  return readJsonFile(filename);
 };
 
 // 3. Update an entry by ID
@@ -74,6 +76,41 @@ const deleteEntry = (uniqId,filename) => {
   return { message: 'Entry deleted successfully' };
 };
 
+const watchFile = (filename,action) =>{
+    // Watch the activeTrade.json file for changes
+  const filePath =   getFilePath(filename)
+  const dat = readEntries(filename)
+  fs.watch(filePath, (eventType, filename) => {
+    if (eventType === "change") {
+      console.log(dat,dat.length)
+      console.log(`${filename} has been updated.`);
+      action()
+    }
+  });
+}
 
+const emitTradeRecord = (filename,eventName='-',action) =>{
+  const tradeFilePath =  getFilePath(filename);
+  fs.watch(tradeFilePath, (eventType) => {
+    if (eventType === "change") {
+    fs.readFile(tradeFilePath, 'utf-8', (err, data) => {
+      if (err) {
+        console.error('Error reading the file:', err);
+        return;
+      }
 
-module.exports = { createEntry, readEntries, updateEntry, deleteEntry };
+      try {
+        const updatedContent = JSON.parse(data); // Parse JSON content if necessary
+        console.log('Updated file content:', updatedContent.length);
+        // io.emit(eventName, updatedContent);
+        action.emit(eventName, updatedContent)
+
+      } catch (parseError) {
+        console.error('Error parsing the file content:', parseError);
+      }
+    });
+    }
+  });
+}
+
+module.exports = {emitTradeRecord, getFilePath,createEntry, readEntries, updateEntry, deleteEntry,watchFile };

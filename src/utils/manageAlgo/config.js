@@ -1,7 +1,7 @@
 const fs = require('fs');
 const path = require('path');
 
-const filePath = path.join(process.cwd(), '../config.json');
+const filePath = path.join(process.cwd(),'public', 'config.json');
 
 const getConfigValue = key => {
   try {

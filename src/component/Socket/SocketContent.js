@@ -57,6 +57,28 @@ const SocketContent = () => {
       socket.off('messageToRoomMember');
     };
   }, []);
+  useEffect(() => {
+    // Set up the event listener
+    socket.on('activeTradeUpdated', data => {
+      // Handle the received data
+      console.log('activeTradeUpdated',data);
+    });
+    socket.on('pandingTradeUpdated', data => {
+      // Handle the received data
+      console.log('pandingTradeUpdated',data);
+    });
+    socket.on('closedTradeUpdated', data => {
+      // Handle the received data
+      console.log('closedTradeUpdated',data);
+    });
+
+    // Clean up the event listener when the component unmounts
+    return () => {
+      socket.off('activeTradeUpdated');
+      socket.off('pandingTradeUpdated');
+      socket.off('closedTradeUpdated');
+    };
+  }, []);
 
   useEffect(() => {
     console.log(receivedMessages);
