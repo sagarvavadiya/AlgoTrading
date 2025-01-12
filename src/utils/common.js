@@ -462,7 +462,6 @@ export function passEnc(textToEncrypt, secret) {
   );
 }
 export const ParseFloat = (value,toFixed=2) =>{
-  console.log(value)
   return parseFloat(parseFloat(value).toFixed(typeof toFixed === 'number' ? toFixed : 2));}
 export function validateURL(url, msg) {
   if (!url) throw 'Enter ' + msg;

@@ -8,14 +8,16 @@ import {
   validate_string,
 } from '@/utils/common';
 import io from 'socket.io-client';
+import CommonTradeTable from '../common/CommonTradeTable';
 const socket = io();
 const AddAlgoModal = ({
   addAlgoForm,
   setAddAlgoForm,
   onSubmitAlgoForm,
   entryOnLtp,
-  setEntryOnLtp,isBothSideTrade,
-  setIsBothSideTrade
+  setEntryOnLtp,
+  isBothSideTrade,
+  setIsBothSideTrade,
 }) => {
   const handleChange = e => {
     const { name, value } = e.target;
@@ -46,7 +48,11 @@ const AddAlgoModal = ({
                 name='isShortSell'
                 className='form-check-input'
                 checked={addAlgoForm.isShortSell}
-                onChange={e => handleChange({target:{name:"isShortSell",value:e.target.checked}})}
+                onChange={e =>
+                  handleChange({
+                    target: { name: 'isShortSell', value: e.target.checked },
+                  })
+                }
                 id='customCheckBox3'
                 required=''
               />
@@ -123,6 +129,37 @@ const AddAlgoModal = ({
 };
 const TradingContent = () => {
   const [cryptoData, setCryptoData] = useState([]);
+  const [activeTradeData, setActiveTradeData] = useState([
+    {
+      uniqId: '1',
+      isShortSell: false,
+      entryPrice: 99017.04,
+      quantity: 1,
+      stopLoss: 99016.941,
+      targetPrice: 100007.2104,
+      loss: 4645.479999999996,
+    },
+    {
+      uniqId: '2',
+      isShortSell: true,
+      entryPrice: 99424.46,
+      quantity: 1,
+      stopLoss: 99424.5594,
+      targetPrice: 94453.237,
+      loss: 5052.900000000009,
+    },
+    {
+      uniqId: '2',
+      isShortSell: true,
+      entryPrice: 94610.6,
+      quantity: 1,
+      stopLoss: 94610.6946,
+      targetPrice: 89880.07,
+      profit: -498.09000000001106,
+    },
+  ]);
+  const [pandingTradeData, setPandingTradeData] = useState([]);
+  const [closedTradeData, setClosedTradeData] = useState([]);
   const [socketBlockId, setSocketBlockId] = useState(10);
   const [entryOnLtp, setEntryOnLtp] = useState(true);
   const [addAlgoForm, setAddAlgoForm] = useState({
@@ -207,25 +244,22 @@ const TradingContent = () => {
     console.log('submit');
 
     if (!isBothSideTrade) {
-          socket.emit('onAddAlgo', {
-      senderID: socketBlockId,
-      data: [formData],
-    });
+      socket.emit('onAddAlgo', {
+        senderID: socketBlockId,
+        data: [formData],
+      });
     } else {
-      function algoStrategy({ltp,quantity,stopLoss,targetPrice}) {
-
-        const regTradeEntry = ltp +1
-        const shortSellTradeEntry = ltp -1
+      function algoStrategy({ ltp, quantity, stopLoss, targetPrice }) {
+        const regTradeEntry = ltp + 1;
+        const shortSellTradeEntry = ltp - 1;
         const regTradeFormData = {
           uniqId: `1`,
-          isShortSell:false,
-          entryPrice:regTradeEntry,
+          isShortSell: false,
+          entryPrice: regTradeEntry,
           quantity: parseInt(quantity),
           stopLoss: ParseFloat(
             modifiedPrice(
-              parseFloat(
-               regTradeEntry,
-              ),
+              parseFloat(regTradeEntry),
               parseFloat(stopLoss),
               'sub',
             ),
@@ -233,25 +267,21 @@ const TradingContent = () => {
           ),
           targetPrice: ParseFloat(
             modifiedPrice(
-              parseFloat(
-                regTradeEntry
-              ),
+              parseFloat(regTradeEntry),
               parseFloat(targetPrice),
               'add',
             ),
             4,
           ),
         };
-        const shortSellTradeFormData =  {
+        const shortSellTradeFormData = {
           uniqId: `2`,
-          isShortSell:true,
-          entryPrice:shortSellTradeEntry,
+          isShortSell: true,
+          entryPrice: shortSellTradeEntry,
           quantity: parseInt(quantity),
           stopLoss: ParseFloat(
             modifiedPrice(
-              parseFloat(
-               shortSellTradeEntry,
-              ),
+              parseFloat(shortSellTradeEntry),
               parseFloat(stopLoss),
               'add',
             ),
@@ -259,9 +289,7 @@ const TradingContent = () => {
           ),
           targetPrice: ParseFloat(
             modifiedPrice(
-              parseFloat(
-                shortSellTradeEntry
-              ),
+              parseFloat(shortSellTradeEntry),
               parseFloat(targetPrice),
               'sub',
             ),
@@ -269,7 +297,7 @@ const TradingContent = () => {
           ),
         };
 
-        return [regTradeFormData,shortSellTradeFormData]
+        return [regTradeFormData, shortSellTradeFormData];
       }
 
       const multiTrades = algoStrategy({
@@ -279,12 +307,11 @@ const TradingContent = () => {
         targetPrice: ParseFloat(addAlgoForm.targetPrice, 4),
       });
 
-
-        socket.emit('onAddAlgo', {
-          senderID: socketBlockId,
-          data: multiTrades,
-        });
-      }
+      socket.emit('onAddAlgo', {
+        senderID: socketBlockId,
+        data: multiTrades,
+      });
+    }
   };
   useEffect(() => {
     // Set up the event listener
@@ -307,6 +334,31 @@ const TradingContent = () => {
   const test = () => {};
 
   // ============================================================================ Add algorithm end ==========================================================================
+  useEffect(() => {
+    // Set up the event listener
+    socket.on('activeTradeUpdated', data => {
+      // Handle the received data
+      setActiveTradeData(data);
+      console.log('activeTradeUpdated', data);
+    });
+    socket.on('pandingTradeUpdated', data => {
+      // Handle the received data
+      setPandingTradeData(data);
+      console.log('pandingTradeUpdated', data);
+    });
+    socket.on('closedTradeUpdated', data => {
+      // Handle the received data
+      setClosedTradeData(data);
+      console.log('closedTradeUpdated', data);
+    });
+
+    // Clean up the event listener when the component unmounts
+    return () => {
+      socket.off('activeTradeUpdated');
+      socket.off('pandingTradeUpdated');
+      socket.off('closedTradeUpdated');
+    };
+  }, []);
   // ============================================================================ Currency list Start ==========================================================================
   useEffect(() => {
     const ws = new WebSocket('wss://stream.binance.com:9443/ws/btcusdt@trade');
@@ -418,6 +470,24 @@ const TradingContent = () => {
               </div>
             </div>
           </div>
+
+          {/* Active Trade Table */}
+
+          <CommonTradeTable
+            data={activeTradeData}
+            tablename={'Active Trade List'}
+          />
+          {/* Panding Trade Table */}
+          <CommonTradeTable
+            data={pandingTradeData}
+            tablename={'Panding Trade List'}
+          />
+           {/* Closed Trade Table */}
+          <CommonTradeTable
+            data={closedTradeData}
+            type='closeTable'
+            tablename={'Closed Trade List'}
+          />
         </div>
       </div>
 
@@ -430,7 +500,7 @@ const TradingContent = () => {
             entryOnLtp={entryOnLtp}
             setEntryOnLtp={setEntryOnLtp}
             isBothSideTrade={isBothSideTrade}
-setIsBothSideTrade={setIsBothSideTrade}
+            setIsBothSideTrade={setIsBothSideTrade}
           />
         }
         handleClose={handleClose}
