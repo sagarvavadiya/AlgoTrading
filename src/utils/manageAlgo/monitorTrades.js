@@ -4,6 +4,7 @@ const path = require('path');
 const WebSocket = require('ws');
 const { deleteEntry, createEntry, readEntries } = require('./manageActiveTrade');
 const { updateConfigValue, getConfigValue } = require('./config');
+const { differentPrc } = require('../backend');
 let ws;
 let monitoring = false;
 let debounceTimeout;
@@ -44,7 +45,7 @@ function startMonitoringTrades() {
           if (livePrice >= trade.targetPrice) {
             deleteEntry(trade.uniqId, 'activeTrade');
             createEntry(
-              { ...trade, profit: livePrice - trade.entryPrice },
+              { ...trade, profit: livePrice - trade.entryPrice,exitPrice:livePrice,exitPrc:differentPrc(trade.entryPrice,livePrice) },
               'closedTrade',
             );
             createEntry(trade, 'pandingTrade');
@@ -52,7 +53,7 @@ function startMonitoringTrades() {
           } else if (livePrice <= trade.stopLoss) {
             deleteEntry(trade.uniqId, 'activeTrade');
             createEntry(
-              { ...trade, loss: trade.entryPrice - livePrice },
+              { ...trade, loss: trade.entryPrice - livePrice,exitPrice:livePrice, exitPrc:differentPrc(trade.entryPrice,livePrice) },
               'closedTrade',
             );
             createEntry(trade, 'pandingTrade');
@@ -70,7 +71,7 @@ function startMonitoringTrades() {
               parseInt(p_trade.entryPrice)
             ) {
               deleteEntry(p_trade.uniqId, 'pandingTrade');
-              createEntry(p_trade, 'activeTrade');
+              createEntry({...p_trade,actualEntryPrice:livePrice}, 'activeTrade');
               console.log('Short sell Trade active',`${parseInt(p_trade.entryPrice) - 2} < ${parseInt(livePrice)} < ${parseInt(p_trade.entryPrice)}`);
             }
           } else {
@@ -81,7 +82,7 @@ function startMonitoringTrades() {
               // parseInt(p_trade.entryPrice) + 2
             ) {
               deleteEntry(p_trade.uniqId, 'pandingTrade');
-              createEntry(p_trade, 'activeTrade');
+              createEntry({...p_trade,actualEntryPrice:livePrice}, 'activeTrade');
               console.log('Normal Trade active',`${parseInt(p_trade.entryPrice)} < ${parseInt(livePrice)} < ${parseInt(p_trade.entryPrice)+2}`);
             }
           }

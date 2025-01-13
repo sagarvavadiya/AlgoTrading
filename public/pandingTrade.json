@@ -2,25 +2,10 @@
   {
     "uniqId": "1",
     "isShortSell": false,
-    "entryPrice": 94174.87,
+    "entryPrice": 95066.22,
+    "actualEntryPrice": 95072.76,
     "quantity": 1,
-    "stopLoss": 94174.7758,
-    "targetPrice": 98883.6135
-  },
-  {
-    "uniqId": "1",
-    "isShortSell": false,
-    "entryPrice": 94143.49,
-    "quantity": 1,
-    "stopLoss": 94143.3959,
-    "targetPrice": 98850.6645
-  },
-  {
-    "uniqId": "2",
-    "isShortSell": true,
-    "entryPrice": 94172.87,
-    "quantity": 1,
-    "stopLoss": 94172.9642,
-    "targetPrice": 89464.2265
+    "stopLoss": 95066.1249,
+    "targetPrice": 99819.531
   }
 ]

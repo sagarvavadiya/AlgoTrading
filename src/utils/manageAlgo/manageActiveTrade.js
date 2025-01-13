@@ -113,4 +113,29 @@ const emitTradeRecord = (filename,eventName='-',action) =>{
   });
 }
 
-module.exports = {emitTradeRecord, getFilePath,createEntry, readEntries, updateEntry, deleteEntry,watchFile };
+const emitInitialTradeRecord = (filename,eventName='-',action,senderId) =>{
+  // action.in(senderId).emit('getInitialData', `data.data`);
+  const tradeFilePath =  getFilePath(filename);
+
+  console.log('st1')
+    fs.readFile(tradeFilePath, 'utf-8', (err, data) => {
+      if (err) {
+        console.error('Error reading the file:', err);
+        return;
+      }
+
+      try {
+        const updatedContent = JSON.parse(data); // Parse JSON content if necessary
+        console.log('Updated file content:', updatedContent.length);
+        action.in(senderId).emit(eventName, updatedContent);
+        // io.emit(eventName, updatedContent);
+        // action.emit(eventName, updatedContent)
+        // action.in(senderId).emit('getInitialData', updatedContent);
+
+      } catch (parseError) {
+        console.error('Error parsing the file content:', parseError);
+      }
+    });
+}
+
+module.exports = {emitInitialTradeRecord,emitTradeRecord, getFilePath,createEntry, readEntries, updateEntry, deleteEntry,watchFile };

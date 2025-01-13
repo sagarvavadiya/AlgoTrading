@@ -129,6 +129,7 @@ const AddAlgoModal = ({
 };
 const TradingContent = () => {
   const [cryptoData, setCryptoData] = useState([]);
+  const [isLogin, setIsLogin] = useState(false);
   const [activeTradeData, setActiveTradeData] = useState([
     {
       uniqId: '1',
@@ -175,13 +176,18 @@ const TradingContent = () => {
   const handleClose = () => setShow(false);
   const handleShow = () => setShow(true);
 
+  const getInitialData = () => {
+    socket.emit('getInitialData', { senderID: socketBlockId, data: 'message' });
+  };
   // ============================================================================ Add algorithm start ==========================================================================
+
   const Login = () => {
     try {
       socket.emit('login', socketBlockId);
       socket.on('user_connected', data => {
         console.log('Login===========>', data);
       });
+      setIsLogin(1);
     } catch (error) {
       console.log('Error in Login Event', error);
     }
@@ -256,6 +262,7 @@ const TradingContent = () => {
           uniqId: `1`,
           isShortSell: false,
           entryPrice: regTradeEntry,
+          actualEntryPrice: regTradeEntry,
           quantity: parseInt(quantity),
           stopLoss: ParseFloat(
             modifiedPrice(
@@ -278,6 +285,7 @@ const TradingContent = () => {
           uniqId: `2`,
           isShortSell: true,
           entryPrice: shortSellTradeEntry,
+          actualEntryPrice: shortSellTradeEntry,
           quantity: parseInt(quantity),
           stopLoss: ParseFloat(
             modifiedPrice(
@@ -331,7 +339,6 @@ const TradingContent = () => {
   useEffect(() => {
     Login();
   }, []);
-  const test = () => {};
 
   // ============================================================================ Add algorithm end ==========================================================================
   useEffect(() => {
@@ -392,6 +399,29 @@ const TradingContent = () => {
         entryPrice: cryptoData[0]?.latestTradedPrice,
       });
     }
+  }, []);
+
+  useEffect(() => {
+    if (isLogin === 1) {
+      getInitialData();
+    }
+  }, [isLogin]);
+
+  const test = () => {
+    getInitialData();
+  };
+
+  useEffect(() => {
+    // Set up the event listener
+    socket.on('messageToAll', data => {
+      // Handle the received data
+      console.log('messageToAll', data);
+    });
+
+    // Clean up the event listener when the component unmounts
+    return () => {
+      socket.off('messageToAll');
+    };
   }, []);
   return (
     <>
@@ -470,7 +500,7 @@ const TradingContent = () => {
               </div>
             </div>
           </div>
-
+          <button onClick={test}>Test</button>
           {/* Active Trade Table */}
 
           <CommonTradeTable
@@ -482,7 +512,7 @@ const TradingContent = () => {
             data={pandingTradeData}
             tablename={'Panding Trade List'}
           />
-           {/* Closed Trade Table */}
+          {/* Closed Trade Table */}
           <CommonTradeTable
             data={closedTradeData}
             type='closeTable'
