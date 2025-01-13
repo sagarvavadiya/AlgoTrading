@@ -3,8 +3,8 @@
   "version": "0.1.0",
   "private": true,
   "scripts": {
-    "dev1": "nodemon server.js",
-    "dev": "next dev -p 5000",
+    "dev": "node server.js",
+    "dev1": "next dev -p 5000",
     "build": "next build",
     "start": "next start",
     "lint": "next lint"

@@ -2,7 +2,11 @@
 const fs = require('fs');
 const path = require('path');
 const WebSocket = require('ws');
-const { deleteEntry, createEntry, readEntries } = require('./manageActiveTrade');
+const {
+  deleteEntry,
+  createEntry,
+  readEntries,
+} = require('./manageActiveTrade');
 const { updateConfigValue, getConfigValue } = require('./config');
 const { differentPrc } = require('../backend');
 let ws;
@@ -14,7 +18,6 @@ function startMonitoringTrades() {
   if (monitoring) return; // Avoid starting multiple monitors
   // monitoring = true;
   updateConfigValue('tradeMonitoring', true);
-
 
   ws = new WebSocket('wss://stream.binance.com:9443/ws/btcusdt@trade');
 
@@ -30,7 +33,7 @@ function startMonitoringTrades() {
         console.log(livePrice);
         // Read active trades
         const trades = readEntries('activeTrade');
-        const pandingTrades = readEntries('pandingTrade')
+        const pandingTrades = readEntries('pandingTrade');
         if (
           (!Array.isArray(trades) || trades.length === 0) &&
           (!Array.isArray(pandingTrades) || pandingTrades.length === 0)
@@ -42,48 +45,122 @@ function startMonitoringTrades() {
 
         // Check each trade for targetPrice or stopLoss
         trades.forEach((trade, index) => {
-          if (livePrice >= trade.targetPrice) {
-            deleteEntry(trade.uniqId, 'activeTrade');
-            createEntry(
-              { ...trade, profit: livePrice - trade.entryPrice,exitPrice:livePrice,exitPrc:differentPrc(trade.entryPrice,livePrice) },
-              'closedTrade',
-            );
-            createEntry(trade, 'pandingTrade');
-            console.log(`target price reached  ${trade.isShortSell?"short sell":"Normal"}`, livePrice - trade.entryPrice);
-          } else if (livePrice <= trade.stopLoss) {
-            deleteEntry(trade.uniqId, 'activeTrade');
-            createEntry(
-              { ...trade, loss: trade.entryPrice - livePrice,exitPrice:livePrice, exitPrc:differentPrc(trade.entryPrice,livePrice) },
-              'closedTrade',
-            );
-            createEntry(trade, 'pandingTrade');
-            console.log(`stop loss reached in ${trade.isShortSell?"short sell":"Normal"}`, trade.entryPrice - livePrice);
+          if (trade.isShortSell) {
+            if (livePrice <= trade.targetPrice) {
+              deleteEntry(trade.uniqId, 'activeTrade');
+              createEntry(
+                {
+                  ...trade,
+                  profit: livePrice - trade.entryPrice,
+                  exitPrice: livePrice,
+                  exitPrc: differentPrc(trade.entryPrice, livePrice),
+                },
+                'closedTrade',
+              );
+              createEntry(trade, 'pandingTrade');
+              console.log(
+                `target price reached  ${
+                  trade.isShortSell ? 'short sell' : 'Normal'
+                }`,
+                livePrice - trade.entryPrice,
+              );
+            } else if (livePrice >= trade.stopLoss) {
+              deleteEntry(trade.uniqId, 'activeTrade');
+              createEntry(
+                {
+                  ...trade,
+                  loss: trade.entryPrice - livePrice,
+                  exitPrice: livePrice,
+                  exitPrc: differentPrc(trade.entryPrice, livePrice),
+                },
+                'closedTrade',
+              );
+              createEntry(trade, 'pandingTrade');
+              console.log(
+                `stop loss reached in ${
+                  trade.isShortSell ? 'short sell' : 'Normal'
+                }`,
+                trade.entryPrice - livePrice,
+              );
+            }
+          } else {
+            if (livePrice >= trade.targetPrice) {
+              deleteEntry(trade.uniqId, 'activeTrade');
+              createEntry(
+                {
+                  ...trade,
+                  profit: livePrice - trade.entryPrice,
+                  exitPrice: livePrice,
+                  exitPrc: differentPrc(trade.entryPrice, livePrice),
+                },
+                'closedTrade',
+              );
+              createEntry(trade, 'pandingTrade');
+              console.log(
+                `target price reached  ${
+                  trade.isShortSell ? 'short sell' : 'Normal'
+                }`,
+                livePrice - trade.entryPrice,
+              );
+            } else if (livePrice <= trade.stopLoss) {
+              deleteEntry(trade.uniqId, 'activeTrade');
+              createEntry(
+                {
+                  ...trade,
+                  loss: trade.entryPrice - livePrice,
+                  exitPrice: livePrice,
+                  exitPrc: differentPrc(trade.entryPrice, livePrice),
+                },
+                'closedTrade',
+              );
+              createEntry(trade, 'pandingTrade');
+              console.log(
+                `stop loss reached in ${
+                  trade.isShortSell ? 'short sell' : 'Normal'
+                }`,
+                trade.entryPrice - livePrice,
+              );
+            }
           }
         });
-        console.log(livePrice)
+        console.log(livePrice);
         // Check each panding trade to be active
         pandingTrades.forEach((p_trade, index) => {
           if (p_trade.isShortSell) {
             if (
               // parseInt(p_trade.entryPrice) - 2 <
               // parseInt(livePrice) &&
-              parseInt(livePrice) <
-              parseInt(p_trade.entryPrice)
+              parseInt(livePrice) < parseInt(p_trade.entryPrice)
             ) {
               deleteEntry(p_trade.uniqId, 'pandingTrade');
-              createEntry({...p_trade,actualEntryPrice:livePrice}, 'activeTrade');
-              console.log('Short sell Trade active',`${parseInt(p_trade.entryPrice) - 2} < ${parseInt(livePrice)} < ${parseInt(p_trade.entryPrice)}`);
+              createEntry(
+                { ...p_trade, actualEntryPrice: livePrice },
+                'activeTrade',
+              );
+              console.log(
+                'Short sell Trade active',
+                `${parseInt(p_trade.entryPrice) - 2} < ${parseInt(
+                  livePrice,
+                )} < ${parseInt(p_trade.entryPrice)}`,
+              );
             }
           } else {
             if (
-              parseInt(p_trade.entryPrice)  <
-              parseInt(livePrice)
+              parseInt(p_trade.entryPrice) < parseInt(livePrice)
               // && parseInt(livePrice) <
               // parseInt(p_trade.entryPrice) + 2
             ) {
               deleteEntry(p_trade.uniqId, 'pandingTrade');
-              createEntry({...p_trade,actualEntryPrice:livePrice}, 'activeTrade');
-              console.log('Normal Trade active',`${parseInt(p_trade.entryPrice)} < ${parseInt(livePrice)} < ${parseInt(p_trade.entryPrice)+2}`);
+              createEntry(
+                { ...p_trade, actualEntryPrice: livePrice },
+                'activeTrade',
+              );
+              console.log(
+                'Normal Trade active',
+                `${parseInt(p_trade.entryPrice)} < ${parseInt(livePrice)} < ${
+                  parseInt(p_trade.entryPrice) + 2
+                }`,
+              );
             }
           }
         });
