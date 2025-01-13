@@ -62,6 +62,13 @@ const updateEntry = (uniqId, updatedFields) => {
     updatedEntry: data[entryIndex],
   };
 };
+const blankEntry = (filename) => {
+  console.log('blankEntry',filename)
+  writeJsonFile([],filename);
+  return {
+    message: 'Entry blanked successfully',
+  };
+};
 
 // 4. Delete an entry by ID
 const deleteEntry = (uniqId,filename) => {
@@ -138,4 +145,4 @@ const emitInitialTradeRecord = (filename,eventName='-',action,senderId) =>{
     });
 }
 
-module.exports = {emitInitialTradeRecord,emitTradeRecord, getFilePath,createEntry, readEntries, updateEntry, deleteEntry,watchFile };
+module.exports = {blankEntry,emitInitialTradeRecord,emitTradeRecord, getFilePath,createEntry, readEntries, updateEntry, deleteEntry,watchFile };

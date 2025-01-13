@@ -179,6 +179,9 @@ const TradingContent = () => {
   const getInitialData = () => {
     socket.emit('getInitialData', { senderID: socketBlockId, data: 'message' });
   };
+  const resetData = () => {
+    socket.emit('resetFiles', { senderID: socketBlockId, data: 'message' });
+  };
   // ============================================================================ Add algorithm start ==========================================================================
 
   const Login = () => {
@@ -410,6 +413,9 @@ const TradingContent = () => {
   const test = () => {
     getInitialData();
   };
+  const resetFileData = () => {
+    resetData();
+  };
 
   useEffect(() => {
     // Set up the event listener
@@ -431,7 +437,7 @@ const TradingContent = () => {
             <div className='col-xl-6 col-xxl-12'>
               <div className='card'>
                 <div className='card-header border-0 pb-0 flex-wrap'>
-                  <h4 className='heading mb-0' onClick={test}>
+                  <h4 className='heading mb-0' >
                     Manage Algo
                   </h4>
                 </div>
@@ -500,7 +506,8 @@ const TradingContent = () => {
               </div>
             </div>
           </div>
-          <button onClick={test}>Test</button>
+          <button className='btn btn-primary m-2' onClick={test}>Get File Data</button>
+          <button className='btn btn-secondary' onClick={resetFileData}>Reset File</button>
           {/* Active Trade Table */}
 
           <CommonTradeTable

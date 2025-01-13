@@ -1,5 +1,5 @@
 const { updateConfigValue, getConfigValue } = require('./config');
-const { createEntry, readEntries, watchFile, getFilePath, emitTradeRecord,  emitInitialTradeRecord } = require('./manageActiveTrade');
+const { createEntry, readEntries, watchFile, getFilePath, emitTradeRecord,  emitInitialTradeRecord, blankEntry } = require('./manageActiveTrade');
 const { watchTradeFile } = require('./monitorTrades');
 const { v4: uuidv4 } = require('uuid');
 // ⇨ '1b9d6bcd-bbfd-4b2d-9b5d-ab8dfbbd4bed'
@@ -51,6 +51,12 @@ function manageSocket(io) {
       emitInitialTradeRecord(`activeTrade`,`activeTradeUpdated`,io,data.senderID)
       emitInitialTradeRecord(`pandingTrade`,`pandingTradeUpdated`,io,data.senderID)
       emitInitialTradeRecord(`closedTrade`,`closedTradeUpdated`,io,data.senderID)
+    });
+    socket.on('resetFiles', data => {
+      console.log('resetFiles',data)
+      blankEntry(`activeTrade`  )
+      blankEntry(`pandingTrade` )
+      blankEntry(`closedTrade` )
     });
     socket.on('onAddAlgo', data => {
       if (data.data && data.data.length > 0) {
