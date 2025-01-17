@@ -1,11 +1,11 @@
 [
   {
-    "uniqId": "1",
-    "isShortSell": false,
-    "entryPrice": 96715.24,
-    "actualEntryPrice": 99301.3,
+    "uniqId": "2",
+    "isShortSell": true,
+    "entryPrice": 100078.99,
+    "actualEntryPrice": 100042.34,
     "quantity": 1,
-    "stopLoss": 96715.1433,
-    "targetPrice": 101551.002
+    "stopLoss": 100079.0901,
+    "targetPrice": 95075.0405
   }
 ]
