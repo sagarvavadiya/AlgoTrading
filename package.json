@@ -2,17 +2,15 @@
   "name": "testing",
   "version": "0.1.0",
   "private": true,
-
   "scripts": {
-  "dev": "node server.js",
-  "dev:next": "next dev -p 5000",
-  "build": "next build",
-  "start": "node server.js",
-  "start:next": "next start",
-  "lint": "next lint",
-  "deploy": "npm run build && npm run start"
-},
-
+    "dev": "node server.js",
+    "dev:next": "next dev -p 5000",
+    "build": "next build",
+    "start": "node server.js",
+    "start:next": "next start",
+    "lint": "next lint",
+    "deploy": "npm run build && npm run start"
+  },
   "dependencies": {
     "@tinymce/tinymce-react": "^5.1.1",
     "axios": "^1.7.7",
@@ -29,6 +27,7 @@
     "socket.io": "^4.8.0",
     "socket.io-client": "^4.8.0",
     "uuid": "^11.0.5",
+    "websocket": "^1.0.35",
     "ws": "^8.18.0"
   }
 }

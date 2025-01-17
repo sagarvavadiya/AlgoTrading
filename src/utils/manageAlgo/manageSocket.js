@@ -7,7 +7,6 @@ const fs = require('fs');
 const path = require('path');
 
 
-
 function manageSocket(io) {
   emitTradeRecord(`activeTrade`,`activeTradeUpdated`,io)
   emitTradeRecord(`pandingTrade`,`pandingTradeUpdated`,io)
