@@ -2,10 +2,10 @@
   {
     "uniqId": "1",
     "isShortSell": false,
-    "entryPrice": 100080.99,
-    "actualEntryPrice": 100080.99,
+    "entryPrice": 104949,
+    "actualEntryPrice": 104949,
     "quantity": 1,
-    "stopLoss": 100080.8899,
-    "targetPrice": 105085.0395
+    "stopLoss": 104948.8951,
+    "targetPrice": 110196.45
   }
 ]

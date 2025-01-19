@@ -35,6 +35,8 @@ function startMonitoringTrades() {
             const livePrice = parseFloat(tradeData.p); // Extract price
             // Read active trades
             const trades = readEntries('activeTrade');
+            const trades2 = readEntries('trades');
+            
             const pandingTrades = readEntries('pandingTrade');
             if (
               (!Array.isArray(trades) || trades.length === 0) &&
@@ -176,6 +178,11 @@ function startMonitoringTrades() {
     connection.on('error', error => {
       updateConfigValue('tradeMonitoring', false);
       console.error('Connection error:', error);
+      watchTradeFile() 
+      createEntry(
+                    { actualEntryPrice: 1 },
+                    'trades',
+                  );
     });
 
     connection.on('close', () => {
