@@ -10,6 +10,7 @@ import {
 import io from 'socket.io-client';
 import CommonTradeTable from '../common/CommonTradeTable';
 const socket = io();
+import {v4 as uniq_id} from 'uuid'
 const AddAlgoModal = ({
   addAlgoForm,
   setAddAlgoForm,
@@ -131,33 +132,7 @@ const TradingContent = () => {
   const [cryptoData, setCryptoData] = useState([]);
   const [isLogin, setIsLogin] = useState(false);
   const [activeTradeData, setActiveTradeData] = useState([
-    {
-      uniqId: '1',
-      isShortSell: false,
-      entryPrice: 99017.04,
-      quantity: 1,
-      stopLoss: 99016.941,
-      targetPrice: 100007.2104,
-      loss: 4645.479999999996,
-    },
-    {
-      uniqId: '2',
-      isShortSell: true,
-      entryPrice: 99424.46,
-      quantity: 1,
-      stopLoss: 99424.5594,
-      targetPrice: 94453.237,
-      loss: 5052.900000000009,
-    },
-    {
-      uniqId: '2',
-      isShortSell: true,
-      entryPrice: 94610.6,
-      quantity: 1,
-      stopLoss: 94610.6946,
-      targetPrice: 89880.07,
-      profit: -498.09000000001106,
-    },
+
   ]);
   const [pandingTradeData, setPandingTradeData] = useState([]);
   const [closedTradeData, setClosedTradeData] = useState([]);
@@ -181,6 +156,9 @@ const TradingContent = () => {
   };
   const resetData = () => {
     socket.emit('resetFiles', { senderID: socketBlockId, data: 'message' });
+  };
+  const closeData = (data) => {
+    socket.emit('closeTrades', { senderID: socketBlockId, data: {...data,livePrice:ParseFloat(cryptoData[0]?.latestTradedPrice, 4)} });
   };
   // ============================================================================ Add algorithm start ==========================================================================
 
@@ -262,7 +240,7 @@ const TradingContent = () => {
         const regTradeEntry = ltp + 1;
         const shortSellTradeEntry = ltp - 1;
         const regTradeFormData = {
-          uniqId: `1`,
+          uniqId: uniq_id(),
           isShortSell: false,
           entryPrice: regTradeEntry,
           actualEntryPrice: regTradeEntry,
@@ -285,7 +263,7 @@ const TradingContent = () => {
           ),
         };
         const shortSellTradeFormData = {
-          uniqId: `2`,
+          uniqId: uniq_id(),
           isShortSell: true,
           entryPrice: shortSellTradeEntry,
           actualEntryPrice: shortSellTradeEntry,
@@ -361,12 +339,18 @@ const TradingContent = () => {
       setClosedTradeData(data);
       console.log('closedTradeUpdated', data);
     });
+    socket.on('closeTrades', data => {
+      // Handle the received data
+      // setClosedTradeData(data);
+      console.log('closeTrades', data);
+    });
 
     // Clean up the event listener when the component unmounts
     return () => {
       socket.off('activeTradeUpdated');
       socket.off('pandingTradeUpdated');
       socket.off('closedTradeUpdated');
+      socket.off('closeTrades');
     };
   }, []);
   // ============================================================================ Currency list Start ==========================================================================
@@ -513,6 +497,15 @@ const TradingContent = () => {
           <CommonTradeTable
             data={activeTradeData}
             tablename={'Active Trade List'}
+            action= {[
+              {
+                type:"btn",
+                varient:"primary",
+                onAction:(data)=>closeData(data),
+                loader:false,
+                title:"Close trade"
+              }
+            ]}
           />
           {/* Panding Trade Table */}
           <CommonTradeTable

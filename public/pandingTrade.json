@@ -1,11 +1,1 @@
-[
-  {
-    "uniqId": "1",
-    "isShortSell": false,
-    "entryPrice": 104949,
-    "actualEntryPrice": 104949,
-    "quantity": 1,
-    "stopLoss": 104948.8951,
-    "targetPrice": 110196.45
-  }
-]
+[]

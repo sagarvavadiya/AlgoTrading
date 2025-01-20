@@ -1,10 +1,11 @@
 const { updateConfigValue, getConfigValue } = require('./config');
-const { createEntry, readEntries, watchFile, getFilePath, emitTradeRecord,  emitInitialTradeRecord, blankEntry } = require('./manageActiveTrade');
+const { createEntry, readEntries, watchFile, getFilePath, emitTradeRecord,  emitInitialTradeRecord, blankEntry, deleteEntry } = require('./manageActiveTrade');
 const { watchTradeFile } = require('./monitorTrades');
 const { v4: uuidv4 } = require('uuid');
 // ⇨ '1b9d6bcd-bbfd-4b2d-9b5d-ab8dfbbd4bed'
 const fs = require('fs');
 const path = require('path');
+const { differentPrc } = require('../backend');
 
 
 function manageSocket(io) {
@@ -56,6 +57,35 @@ function manageSocket(io) {
       blankEntry(`activeTrade`  )
       blankEntry(`pandingTrade` )
       blankEntry(`closedTrade` )
+    });
+    socket.on('closeTrades', data => {
+      console.log('closeTrades',data)
+      io.in(data.senderID).emit('closeTrades', data.data);
+      deleteEntry(data.data.uniqId, 'activeTrade');
+      // here liveprice get from frontend side
+      const {isShortSell,livePrice,entryPrice} = data?.data ||{}
+      if (isShortSell) {
+        createEntry(
+        {
+          ...data.data,
+          profit: entryPrice - livePrice,
+          exitPrice: livePrice,
+          exitPrc: differentPrc(entryPrice, livePrice),
+        },
+        'closedTrade',
+      );
+      }else{
+        createEntry(
+          {
+            ...data.data,
+            profit:entryPrice - livePrice,
+            exitPrice: livePrice,
+            exitPrc: differentPrc(entryPrice, livePrice),
+          },
+          'closedTrade',
+        );
+      }
+
     });
     socket.on('onAddAlgo', data => {
       if (data.data && data.data.length > 0) {

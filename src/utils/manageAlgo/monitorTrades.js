@@ -22,7 +22,6 @@ function startMonitoringTrades() {
 
   client.on('connect', connection => {
     console.log('Connected to Binance WebSocket');
-
     connection.on('message', message => {
       if (message.type === 'utf8') {
         // Clear the existing debounce timer
@@ -35,8 +34,7 @@ function startMonitoringTrades() {
             const livePrice = parseFloat(tradeData.p); // Extract price
             // Read active trades
             const trades = readEntries('activeTrade');
-            const trades2 = readEntries('trades');
-            
+
             const pandingTrades = readEntries('pandingTrade');
             if (
               (!Array.isArray(trades) || trades.length === 0) &&
@@ -49,6 +47,7 @@ function startMonitoringTrades() {
 
             // Check each trade for targetPrice or stopLoss
             trades.forEach((trade, index) => {
+              //  condition for shortsell
               if (trade.isShortSell) {
                 if (livePrice <= trade.targetPrice) {
                   deleteEntry(trade.uniqId, 'activeTrade');
@@ -73,7 +72,7 @@ function startMonitoringTrades() {
                   createEntry(
                     {
                       ...trade,
-                      loss: trade.entryPrice - livePrice,
+                      profit:  livePrice - trade.entryPrice,
                       exitPrice: livePrice,
                       exitPrc: differentPrc(trade.entryPrice, livePrice),
                     },
@@ -88,6 +87,7 @@ function startMonitoringTrades() {
                   );
                 }
               } else {
+                //  condition for normal order
                 if (livePrice >= trade.targetPrice) {
                   deleteEntry(trade.uniqId, 'activeTrade');
                   createEntry(
@@ -111,7 +111,7 @@ function startMonitoringTrades() {
                   createEntry(
                     {
                       ...trade,
-                      loss: trade.entryPrice - livePrice,
+                      profit: livePrice - trade.entryPrice,
                       exitPrice: livePrice,
                       exitPrc: differentPrc(trade.entryPrice, livePrice),
                     },
@@ -178,11 +178,9 @@ function startMonitoringTrades() {
     connection.on('error', error => {
       updateConfigValue('tradeMonitoring', false);
       console.error('Connection error:', error);
-      watchTradeFile() 
-      createEntry(
-                    { actualEntryPrice: 1 },
-                    'trades',
-                  );
+      const restartServer = readEntries('restartServer');
+      watchTradeFile();
+      createEntry({ restartnum: restartServer && restartServer.length ? (restartServer.length+ 1):1 }, 'trades');
     });
 
     connection.on('close', () => {

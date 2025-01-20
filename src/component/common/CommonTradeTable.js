@@ -1,7 +1,7 @@
 import { ParseFloat } from '@/utils/common';
 import React, { useEffect, useState } from 'react';
 
-const CommonTradeTable = ({ tablename,data , type = 'normal',}) => {
+const CommonTradeTable = ({ tablename, data, type = 'normal', action }) => {
   const [recordList, setRecordList] = useState([]);
 
   useEffect(() => {
@@ -25,6 +25,7 @@ const CommonTradeTable = ({ tablename,data , type = 'normal',}) => {
                   <th>Stoploss</th>
                   <th>Target</th>
                   {type == 'closeTable' && <th>Profit/Loss</th>}
+                  {action && action.length > 0 && <th>Action</th>}
                 </tr>
               </thead>
               <tbody>
@@ -52,20 +53,52 @@ const CommonTradeTable = ({ tablename,data , type = 'normal',}) => {
 
                         {type == 'closeTable' && (
                           <td>
-                            {rec?.loss || rec?.profit < 0 ? (
-                              <span className='badge badge-danger border-0'>
-                                <i className='fa-solid fa-arrow-down me-1' />
-                                {ParseFloat(
-                                  Math.abs(rec?.loss || rec?.profit),
-                                  4,
-                                )}
+                            {rec?.isShortSell ? (
+                              <span
+                                className={`badge badge-${
+                                  rec?.profit < 0 ? 'primary' : 'danger'
+                                } border-0`}
+                              >
+                                <i
+                                  className={`fa-solid fa-arrow-${
+                                    rec?.profit < 0 ? 'up' : 'down'
+                                  } me-1`}
+                                />
+                                {ParseFloat(Math.abs(rec?.profit), 4)}
                               </span>
                             ) : (
-                              <span className='badge badge-primary border-0'>
-                                <i className='fa-solid fa-arrow-up me-1' />
+                              <span
+                                className={`badge badge-${
+                                  rec?.profit > 0 ? 'primary' : 'danger'
+                                } border-0`}
+                              >
+                                <i
+                                  className={`fa-solid fa-arrow-${
+                                    rec?.profit > 0 ? 'up' : 'down'
+                                  } me-1`}
+                                />
                                 {ParseFloat(Math.abs(rec?.profit), 4)}
                               </span>
                             )}
+
+                          </td>
+                        )}
+
+                        {action && action.length > 0 && (
+                          <td>
+                            {action.map((i, index) => {
+                              return (
+                                <button
+                                  key={index}
+                                  className={`btn btn-${
+                                    i?.varient ?? 'primary'
+                                  }`}
+                                  onClick={e => i.onAction(rec)}
+                                >
+                                  {i.title}
+                                </button>
+                              );
+                            })}
                           </td>
                         )}
                       </tr>
