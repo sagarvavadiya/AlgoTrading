@@ -63,14 +63,16 @@ function manageSocket(io) {
       io.in(data.senderID).emit('closeTrades', data.data);
       deleteEntry(data.data.uniqId, 'activeTrade');
       // here liveprice get from frontend side
-      const {isShortSell,livePrice,entryPrice} = data?.data ||{}
+      const {isShortSell,livePrice,entryPrice,actualEntryPrice} = data?.data ||{}
+      const realEntry =  actualEntryPrice ||  entryPrice
       if (isShortSell) {
         createEntry(
         {
           ...data.data,
-          profit: entryPrice - livePrice,
+          profit:livePrice - realEntry,
           exitPrice: livePrice,
-          exitPrc: differentPrc(entryPrice, livePrice),
+          exitPrc: differentPrc(realEntry, livePrice),
+          appliedCondition:`Close trade by short sell with profit of: livePrice${livePrice} - realEntry${realEntry} : ${ livePrice - realEntry}`
         },
         'closedTrade',
       );
@@ -78,9 +80,10 @@ function manageSocket(io) {
         createEntry(
           {
             ...data.data,
-            profit:entryPrice - livePrice,
+            profit:livePrice - realEntry,
             exitPrice: livePrice,
-            exitPrc: differentPrc(entryPrice, livePrice),
+            exitPrc: differentPrc(realEntry, livePrice),
+            appliedCondition:`Close trade by noraml trade with profit of: livePrice${livePrice} - realEntry${realEntry} : ${ livePrice - realEntry}`
           },
           'closedTrade',
         );

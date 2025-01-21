@@ -300,6 +300,9 @@ const TradingContent = () => {
         senderID: socketBlockId,
         data: multiTrades,
       });
+
+
+      setShow(false)
     }
   };
   useEffect(() => {

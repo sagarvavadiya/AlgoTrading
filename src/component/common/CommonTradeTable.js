@@ -1,9 +1,46 @@
 import { ParseFloat } from '@/utils/common';
 import React, { useEffect, useState } from 'react';
+import CommonModal from './CommonModal';
 
+const VeiwDetails = ({ modalData }) => {
+  return (
+    <div className='overflow-auto'>
+      <table className='table  card-table border-no success-tbl'>
+        <thead>
+          <tr>
+            {Object.keys(modalData).map((i, index) => {
+              return <th key={index}>{i}</th>;
+            })}
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            {Object.values(modalData).map((i, index) => {
+              return <th key={index}>{i}</th>;
+            })}
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  );
+};
 const CommonTradeTable = ({ tablename, data, type = 'normal', action }) => {
   const [recordList, setRecordList] = useState([]);
+  const [show, setShow] = useState(false);
+  const [modalData, setModalData] = useState({});
 
+  const handelModal = value => {
+    if (value) {
+      setShow(true);
+    } else {
+      setShow(false);
+      setModalData({});
+    }
+  };
+  const handelView = data => {
+    setModalData(data);
+    handelModal(true);
+  };
   useEffect(() => {
     data && setRecordList(data);
   }, [data]);
@@ -34,7 +71,11 @@ const CommonTradeTable = ({ tablename, data, type = 'normal', action }) => {
                   recordList.map((rec, index) => {
                     return (
                       <tr key={index}>
-                        <td>{rec?.uniqId}</td>
+                        <td
+                          onClick={() => handelView({ ...rec, table: 'Any' })}
+                        >
+                          {rec?.uniqId}
+                        </td>
                         <td>
                           {rec?.isShortSell ? (
                             <span className='badge badge-danger light border-0'>
@@ -55,6 +96,9 @@ const CommonTradeTable = ({ tablename, data, type = 'normal', action }) => {
                           <td>
                             {rec?.isShortSell ? (
                               <span
+                                onClick={() =>
+                                  handelView({ ...rec, table: 'closeTable' })
+                                }
                                 className={`badge badge-${
                                   rec?.profit < 0 ? 'primary' : 'danger'
                                 } border-0`}
@@ -68,6 +112,9 @@ const CommonTradeTable = ({ tablename, data, type = 'normal', action }) => {
                               </span>
                             ) : (
                               <span
+                                onClick={() =>
+                                  handelView({ ...rec, table: 'closeTable' })
+                                }
                                 className={`badge badge-${
                                   rec?.profit > 0 ? 'primary' : 'danger'
                                 } border-0`}
@@ -80,7 +127,6 @@ const CommonTradeTable = ({ tablename, data, type = 'normal', action }) => {
                                 {ParseFloat(Math.abs(rec?.profit), 4)}
                               </span>
                             )}
-
                           </td>
                         )}
 
@@ -109,6 +155,13 @@ const CommonTradeTable = ({ tablename, data, type = 'normal', action }) => {
           </div>
         </div>
       </div>
+      <CommonModal
+        children={<VeiwDetails modalData={modalData} />}
+        handleClose={() => handelModal(false)}
+        handleShow={() => handelModal(true)}
+        show={show}
+        title='View close trade details'
+      />
     </>
   );
 };

@@ -48,42 +48,41 @@ function startMonitoringTrades() {
             // Check each trade for targetPrice or stopLoss
             trades.forEach((trade, index) => {
               //  condition for shortsell
+              const realEntry = trade?.actualEntryPrice || trade?.entryPrice
               if (trade.isShortSell) {
                 if (livePrice <= trade.targetPrice) {
                   deleteEntry(trade.uniqId, 'activeTrade');
                   createEntry(
                     {
                       ...trade,
-                      profit: livePrice - trade.entryPrice,
+                      profit: livePrice - realEntry,
                       exitPrice: livePrice,
-                      exitPrc: differentPrc(trade.entryPrice, livePrice),
+                      exitPrc: differentPrc(realEntry, livePrice),
+                      appliedCondition:`Target reached in short sell: livePrice${livePrice} <= trade.targetPrice${trade.targetPrice}`
                     },
                     'closedTrade',
                   );
                   createEntry(trade, 'pandingTrade');
                   console.log(
-                    `target price reached  ${
-                      trade.isShortSell ? 'short sell' : 'Normal'
-                    }`,
-                    livePrice - trade.entryPrice,
+                    `Target reached  in short sell: livePrice${livePrice} <= trade.targetPrice${trade.targetPrice}`,
+                    livePrice - realEntry,
                   );
                 } else if (livePrice >= trade.stopLoss) {
                   deleteEntry(trade.uniqId, 'activeTrade');
                   createEntry(
                     {
                       ...trade,
-                      profit:  livePrice - trade.entryPrice,
+                      profit:  livePrice - realEntry,
                       exitPrice: livePrice,
-                      exitPrc: differentPrc(trade.entryPrice, livePrice),
+                      exitPrc: differentPrc(realEntry, livePrice),
+                      appliedCondition:`Stoploss hit in short sell: livePrice${livePrice} >= trade.stopLoss${trade.stopLoss}`
                     },
                     'closedTrade',
                   );
                   createEntry(trade, 'pandingTrade');
                   console.log(
-                    `stop loss reached in ${
-                      trade.isShortSell ? 'short sell' : 'Normal'
-                    }`,
-                    trade.entryPrice - livePrice,
+                    `Stoploss hit in short sell: livePrice${livePrice} >= trade.stopLoss${trade.stopLoss}`,
+                    livePrice - realEntry,
                   );
                 }
               } else {
@@ -93,36 +92,34 @@ function startMonitoringTrades() {
                   createEntry(
                     {
                       ...trade,
-                      profit: livePrice - trade.entryPrice,
+                      profit: livePrice - realEntry,
                       exitPrice: livePrice,
-                      exitPrc: differentPrc(trade.entryPrice, livePrice),
+                      exitPrc: differentPrc(realEntry, livePrice),
+                      appliedCondition:`Target reached in normal trade:  livePrice${livePrice} >= trade.targetPrice${trade.targetPrice}`
                     },
                     'closedTrade',
                   );
                   createEntry(trade, 'pandingTrade');
                   console.log(
-                    `target price reached  ${
-                      trade.isShortSell ? 'short sell' : 'Normal'
-                    }`,
-                    livePrice - trade.entryPrice,
+                    `Target reached in normal trade:  livePrice${livePrice} >= trade.targetPrice${trade.targetPrice}`,
+                    livePrice - realEntry,
                   );
                 } else if (livePrice <= trade.stopLoss) {
                   deleteEntry(trade.uniqId, 'activeTrade');
                   createEntry(
                     {
                       ...trade,
-                      profit: livePrice - trade.entryPrice,
+                      profit: livePrice - realEntry,
                       exitPrice: livePrice,
-                      exitPrc: differentPrc(trade.entryPrice, livePrice),
+                      exitPrc: differentPrc(realEntry, livePrice),
+                      appliedCondition:`Stoploss hit in normal trade: livePrice${livePrice} <= trade.stopLoss${trade.stopLoss}`
                     },
                     'closedTrade',
                   );
                   createEntry(trade, 'pandingTrade');
                   console.log(
-                    `stop loss reached in ${
-                      trade.isShortSell ? 'short sell' : 'Normal'
-                    }`,
-                    trade.entryPrice - livePrice,
+                    `Stoploss hit in normal trade: livePrice${livePrice} <= trade.stopLoss${trade.stopLoss}`,
+                    livePrice - realEntry,
                   );
                 }
               }
