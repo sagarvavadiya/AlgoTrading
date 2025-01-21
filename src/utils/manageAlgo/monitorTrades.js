@@ -124,7 +124,7 @@ function startMonitoringTrades() {
                 }
               }
             });
-            console.log(livePrice);
+           
             // Check each panding trade to be active
             pandingTrades.forEach((p_trade, index) => {
               if (p_trade.isShortSell) {
@@ -181,8 +181,13 @@ function startMonitoringTrades() {
     });
 
     connection.on('close', () => {
+     
       updateConfigValue('tradeMonitoring', false);
-      console.log('Connection closed');
+      const restartServer = readEntries('restartServer');
+      watchTradeFile();
+      createEntry({ restartnum: restartServer && restartServer.length ? (restartServer.length+ 1):1 }, 'trades');
+  
+ console.log('Connection closed');
     });
   });
 
