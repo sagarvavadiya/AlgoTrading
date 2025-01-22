@@ -180,14 +180,14 @@ function startMonitoringTrades() {
       createEntry({ restartnum: restartServer && restartServer.length ? (restartServer.length+ 1):1 }, 'trades');
     });
 
-    connection.on('close', () => {
+    connection.on('close', (reson) => {
      
       updateConfigValue('tradeMonitoring', false);
-      const restartServer = readEntries('restartServer');
-      watchTradeFile();
-      createEntry({ restartnum: restartServer && restartServer.length ? (restartServer.length+ 1):1 }, 'trades');
+     // const restartServer = readEntries('restartServer');
+    //  watchTradeFile();
+      //createEntry({ restartnum: restartServer && restartServer.length ? (restartServer.length+ 1):1 }, 'trades');
   
- console.log('Connection closed');
+ console.log('Connection closed because :', reason);
     });
   });
 

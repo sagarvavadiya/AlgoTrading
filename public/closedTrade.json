@@ -1,3 +1,29 @@
 [
-
+  {
+    "uniqId": "98d30234-9c6e-4520-8124-c33a15904aaa",
+    "isShortSell": true,
+    "entryPrice": 104913.34,
+    "actualEntryPrice": 104832,
+    "quantity": 1,
+    "stopLoss": 104913.4449,
+    "targetPrice": 99667.673,
+    "profit": 398.00999999999476,
+    "exitPrice": 105230.01,
+    "exitPrc": 0.37966460622710124,
+    "appliedCondition": "Stoploss hit in short sell: livePrice105230.01 >= trade.stopLoss104913.4449"
+  },
+  {
+    "uniqId": "b4257225-027a-4fb3-b26a-a81e2af0f7a4",
+    "isShortSell": false,
+    "entryPrice": 104915.34,
+    "actualEntryPrice": 105230.01,
+    "quantity": 1,
+    "stopLoss": 104915.2351,
+    "targetPrice": 110161.107,
+    "livePrice": 105423.99,
+    "profit": 193.98000000001048,
+    "exitPrice": 105423.99,
+    "exitPrc": 0.1843390492883261,
+    "appliedCondition": "Close trade by noraml trade with profit of: livePrice105423.99 - realEntry105230.01 : 193.98000000001048"
+  }
 ]
