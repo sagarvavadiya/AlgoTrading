@@ -5,7 +5,7 @@
 // import { getToken } from "next-auth/jwt"
 // import { sql_query } from "./dbconnect"
 
-
+const moment = require('moment')
 // export async function check_admin_login(req) {
 // 	let id = null, status = false
 // 	try {
@@ -229,4 +229,14 @@
 
  }
 
- module.exports = {differentPrc}
+  function convert_date(date) {
+  return moment(date * 1000).format("DD, MMM YYYY hh:mm A");
+}
+
+ function get_timestemp() {
+  return Math.floor(new Date().getTime() / 1000)
+}
+ function currentTime() {
+  return convert_date(get_timestemp())
+}
+ module.exports = {differentPrc,currentTime}

@@ -5,7 +5,7 @@ const {
   readEntries,
 } = require('./manageActiveTrade');
 const { updateConfigValue, getConfigValue } = require('./config');
-const { differentPrc } = require('../backend');
+const { differentPrc, get_timestemp, currentTime } = require('../backend');
 const WebSocketClient = require('websocket').client;
 const client = new WebSocketClient();
 let ws;
@@ -30,6 +30,7 @@ function startMonitoringTrades() {
         // Set a new debounce timer
         debounceTimeout = setTimeout(() => {
           try {
+            const current_time = currentTime()
             const tradeData = JSON.parse(message.utf8Data);
             const livePrice = parseFloat(tradeData.p); // Extract price
             // Read active trades
@@ -57,6 +58,8 @@ function startMonitoringTrades() {
                       ...trade,
                       profit: livePrice - realEntry,
                       exitPrice: livePrice,
+                      entryAt:trade.entryAt,
+                      exitAt:current_time,
                       exitPrc: differentPrc(realEntry, livePrice),
                       appliedCondition:`Target reached in short sell: livePrice${livePrice} <= trade.targetPrice${trade.targetPrice}`
                     },
@@ -74,6 +77,8 @@ function startMonitoringTrades() {
                       ...trade,
                       profit:  livePrice - realEntry,
                       exitPrice: livePrice,
+                      entryAt:trade.entryAt,
+                      exitAt:current_time,
                       exitPrc: differentPrc(realEntry, livePrice),
                       appliedCondition:`Stoploss hit in short sell: livePrice${livePrice} >= trade.stopLoss${trade.stopLoss}`
                     },
@@ -94,6 +99,8 @@ function startMonitoringTrades() {
                       ...trade,
                       profit: livePrice - realEntry,
                       exitPrice: livePrice,
+                      entryAt:trade.entryAt,
+                      exitAt:current_time,
                       exitPrc: differentPrc(realEntry, livePrice),
                       appliedCondition:`Target reached in normal trade:  livePrice${livePrice} >= trade.targetPrice${trade.targetPrice}`
                     },
@@ -111,6 +118,8 @@ function startMonitoringTrades() {
                       ...trade,
                       profit: livePrice - realEntry,
                       exitPrice: livePrice,
+                      entryAt:trade.entryAt,
+                      exitAt:current_time,
                       exitPrc: differentPrc(realEntry, livePrice),
                       appliedCondition:`Stoploss hit in normal trade: livePrice${livePrice} <= trade.stopLoss${trade.stopLoss}`
                     },
@@ -124,7 +133,7 @@ function startMonitoringTrades() {
                 }
               }
             });
-           
+
             // Check each panding trade to be active
             pandingTrades.forEach((p_trade, index) => {
               if (p_trade.isShortSell) {
@@ -135,7 +144,7 @@ function startMonitoringTrades() {
                 ) {
                   deleteEntry(p_trade.uniqId, 'pandingTrade');
                   createEntry(
-                    { ...p_trade, actualEntryPrice: livePrice },
+                    { ...p_trade, actualEntryPrice: livePrice,  entryAt:current_time, },
                     'activeTrade',
                   );
                   console.log(
@@ -153,7 +162,7 @@ function startMonitoringTrades() {
                 ) {
                   deleteEntry(p_trade.uniqId, 'pandingTrade');
                   createEntry(
-                    { ...p_trade, actualEntryPrice: livePrice },
+                    { ...p_trade, actualEntryPrice: livePrice, entryAt:current_time, },
                     'activeTrade',
                   );
                   console.log(
@@ -181,12 +190,12 @@ function startMonitoringTrades() {
     });
 
     connection.on('close', (reson) => {
-     
+
       updateConfigValue('tradeMonitoring', false);
      // const restartServer = readEntries('restartServer');
     //  watchTradeFile();
       //createEntry({ restartnum: restartServer && restartServer.length ? (restartServer.length+ 1):1 }, 'trades');
-  
+
  console.log('Connection closed because :', reason);
     });
   });

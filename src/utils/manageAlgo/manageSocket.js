@@ -5,7 +5,7 @@ const { v4: uuidv4 } = require('uuid');
 // ⇨ '1b9d6bcd-bbfd-4b2d-9b5d-ab8dfbbd4bed'
 const fs = require('fs');
 const path = require('path');
-const { differentPrc } = require('../backend');
+const { differentPrc, currentTime } = require('../backend');
 
 
 function manageSocket(io) {
@@ -14,6 +14,7 @@ function manageSocket(io) {
   emitTradeRecord(`closedTrade`,`closedTradeUpdated`,io)
   io.on('connection', socket => {
     console.log('A user connected');
+    const current_time = currentTime()
 
     // Functionality for send message to all user
     socket.on('messageToAll', data => {
@@ -71,6 +72,8 @@ function manageSocket(io) {
           ...data.data,
           profit:livePrice - realEntry,
           exitPrice: livePrice,
+          entryAt:trade.entryAt,
+          exitAt:current_time,
           exitPrc: differentPrc(realEntry, livePrice),
           appliedCondition:`Close trade by short sell with profit of: livePrice${livePrice} - realEntry${realEntry} : ${ livePrice - realEntry}`
         },
@@ -82,6 +85,8 @@ function manageSocket(io) {
             ...data.data,
             profit:livePrice - realEntry,
             exitPrice: livePrice,
+            entryAt:trade.entryAt,
+            exitAt:current_time,
             exitPrc: differentPrc(realEntry, livePrice),
             appliedCondition:`Close trade by noraml trade with profit of: livePrice${livePrice} - realEntry${realEntry} : ${ livePrice - realEntry}`
           },

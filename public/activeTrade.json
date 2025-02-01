@@ -1,11 +1,22 @@
 [
   {
-    "uniqId": "98d30234-9c6e-4520-8124-c33a15904aaa",
+    "uniqId": "91954c26-d942-4dd9-a9cb-6645f9f6062b",
     "isShortSell": true,
-    "entryPrice": 104913.34,
-    "actualEntryPrice": 104257.8,
+    "entryPrice": 101751.08,
+    "actualEntryPrice": 101732.02,
     "quantity": 1,
-    "stopLoss": 104913.4449,
-    "targetPrice": 99667.673
+    "stopLoss": 101751.1818,
+    "targetPrice": 96663.526,
+    "entryAt": "01, Feb 2025 04:33 PM"
+  },
+  {
+    "uniqId": "5ca8bec9-abd1-40b7-85e2-330638e087f7",
+    "isShortSell": false,
+    "entryPrice": 101722.37,
+    "actualEntryPrice": 101723.63,
+    "quantity": 1,
+    "stopLoss": 101722.2683,
+    "targetPrice": 106808.4885,
+    "entryAt": "01, Feb 2025 04:37 PM"
   }
 ]
